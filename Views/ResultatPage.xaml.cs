@@ -1,26 +1,53 @@
+using CalculateurAge.Services;
+using CalculateurAge.ViewModels;
+
 namespace CalculateurAge.Views;
 
-// Relie le parametre "nom" de l'URL a la propriete Nom.
+// Relie les parametres de l'URL aux proprietes du ViewModel.
+// Le code-behind ne fait QUE du branchement : aucun calcul,
+// aucun texte, aucune decision.
 [QueryProperty(nameof(Nom), "nom")]
 [QueryProperty(nameof(Age), "age")]
+[QueryProperty(nameof(Statut), "statut")]
+[QueryProperty(nameof(Anniversaire), "anniversaire")]
 public partial class ResultatPage : ContentPage
 {
-	// Ces proprietes sont remplies par la navigation,
-	// APRES le constructeur.
-	public string Nom { get; set; } = string.Empty;
-	public string Age { get; set; } = string.Empty;
+	private readonly ResultatViewModel _viewModel;
 
-	// Construit l'arbre visuel decrit par le XAML.
-	public ResultatPage() => InitializeComponent();
-
-	// Appele a CHAQUE affichage de la page.
-	protected override void OnAppearing()
+	public ResultatPage() : this(new ShellNavigationService())
 	{
-		base.OnAppearing();
-		lblMessage.Text = $"{Nom}, vous avez {Age} ans";
 	}
 
-	// ".." = revenir a la page precedente.
-	private async void OnRetourClicked(object? s, EventArgs e)
-		=> await Shell.Current.GoToAsync("..");
+	public ResultatPage(INavigationService navigation)
+	{
+		InitializeComponent();
+		_viewModel = new ResultatViewModel(navigation);
+		BindingContext = _viewModel;
+	}
+
+	// Ces proprietes sont remplies par la navigation, APRES le
+	// constructeur : on les transmet simplement au ViewModel.
+	public string Nom
+	{
+		get => _viewModel.Nom;
+		set => _viewModel.Nom = value;
+	}
+
+	public string Age
+	{
+		get => _viewModel.Age;
+		set => _viewModel.Age = value;
+	}
+
+	public string Statut
+	{
+		get => _viewModel.Statut;
+		set => _viewModel.Statut = value;
+	}
+
+	public string Anniversaire
+	{
+		get => _viewModel.Anniversaire;
+		set => _viewModel.Anniversaire = value;
+	}
 }

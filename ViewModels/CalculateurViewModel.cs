@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CalculateurAge.Models;
+using CalculateurAge.Services;
 
 namespace CalculateurAge.ViewModels;
 
@@ -12,8 +13,10 @@ public class CalculateurViewModel : BaseViewModel
 		= DateTime.Today.AddYears(-20);
 
 	// Champs prives : la vraie donnee.
+	private readonly INavigationService? _navigation;
 	private string _nom = "";
 	private DateTime _dateNaissance = DateParDefaut;
+	private int _age;
 	private string _resultat = "";
 	private bool _resultatVisible;
 	private string _statut = "";
@@ -56,10 +59,20 @@ public class CalculateurViewModel : BaseViewModel
 		set => SetField(ref _resultat, value);
 	}
 
+	public int Age
+	{
+		get => _age;
+		set => SetField(ref _age, value);
+	}
+
 	public bool ResultatVisible
 	{
 		get => _resultatVisible;
-		set => SetField(ref _resultatVisible, value);
+		set
+		{
+			if (SetField(ref _resultatVisible, value))
+				AfficherResultatCommand?.Rafraichir();
+		}
 	}
 
 	// "Majeur" ou "Mineur", calcule apres l'age.
@@ -94,6 +107,10 @@ public class CalculateurViewModel : BaseViewModel
 	public RelayCommand EffacerCommand { get; }
 	public RelayCommand EffacerHistoriqueCommand { get; }
 
+	// Ouvre ResultatPage en lui transmettant l'etat courant :
+	// le ViewModel decide, le service de navigation sait comment.
+	public AsyncRelayCommand AfficherResultatCommand { get; }
+
 	// Historique des calculs : observe par le CollectionView
 	// via l'interface INotifyCollectionChanged.
 	public ObservableCollection<EntreeHistorique> Historique
@@ -106,8 +123,14 @@ public class CalculateurViewModel : BaseViewModel
 
 	public bool HistoriqueVisible => Historique.Count > 0;
 
-	public CalculateurViewModel()
+	public CalculateurViewModel() : this(null)
 	{
+	}
+
+	public CalculateurViewModel(INavigationService? navigation)
+	{
+		_navigation = navigation;
+
 		CalculerCommand = new RelayCommand(
 			Calculer,
 			() => !string.IsNullOrWhiteSpace(Nom));
@@ -120,6 +143,11 @@ public class CalculateurViewModel : BaseViewModel
 		EffacerHistoriqueCommand = new RelayCommand(
 			EffacerHistorique,
 			() => Historique.Count > 0);
+
+		AfficherResultatCommand = new AsyncRelayCommand(
+			AfficherResultatAsync,
+			() => ResultatVisible
+				  && _navigation is not null);
 
 		// Chaque ajout/vidage notifie les proprietes derivees.
 		Historique.CollectionChanged += (_, _) =>
@@ -143,7 +171,8 @@ public class CalculateurViewModel : BaseViewModel
 
 		int age = CalculerAge(DateNaissance);
 
-		Resultat = $"{Nom}, vous avez {age} ans";
+		Age = age;
+		Resultat = $"{Nom}, vous avez {Age} ans";
 		Statut = age >= 18 ? "Majeur" : "Mineur";
 		ProchainAnniversaire =
 			LibelleProchainAnniversaire(DateNaissance);
@@ -168,6 +197,7 @@ public class CalculateurViewModel : BaseViewModel
 	{
 		Nom = "";
 		DateNaissance = DateParDefaut;
+		Age = 0;
 		Resultat = "";
 		ResultatVisible = false;
 		Statut = "";
@@ -180,6 +210,16 @@ public class CalculateurViewModel : BaseViewModel
 
 	// Vide l'historique sans toucher aux champs du formulaire.
 	private void EffacerHistorique() => Historique.Clear();
+
+	// Transmet l'etat courant a la page de resultat.
+	private Task AfficherResultatAsync()
+		=> _navigation is null
+			? Task.CompletedTask
+			: _navigation.VersResultatAsync(
+				string.IsNullOrWhiteSpace(Nom) ? Nom : Nom.Trim(),
+				Age,
+				Statut,
+				ProchainAnniversaire);
 
 	private void AfficherErreur(string message)
 	{
