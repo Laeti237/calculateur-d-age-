@@ -30,6 +30,26 @@
                    IsVisible="{Binding ResultatVisible}"/>
             <Label Text="{Binding ProchainAnniversaire}" FontSize="16"
                    IsVisible="{Binding ResultatVisible}"/>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Label Grid.Column="0" Text="Historique"
+                       FontSize="16" VerticalOptions="Center"/>
+                <Button Grid.Column="1" Text="Vider"
+                        Command="{Binding EffacerHistoriqueCommand}"/>
+            </Grid>
+
+                <Label Text="{Binding CompteHistorique}" FontSize="14"/>
+
+            <CollectionView ItemsSource="{Binding Historique}"
+                            HeightRequest="160">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Label Text="{Binding Libelle}"
+                               FontSize="14"
+                               Padding="0,4"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
         </VerticalStackLayout>
     </ScrollView>
 

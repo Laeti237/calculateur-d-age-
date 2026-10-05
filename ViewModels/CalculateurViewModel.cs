@@ -1,3 +1,6 @@
+using System.Collections.ObjectModel;
+using CalculateurAge.Models;
+
 namespace CalculateurAge.ViewModels;
 
 // Contient l'ETAT de l'ecran et les ACTIONS possibles.
@@ -89,6 +92,19 @@ public class CalculateurViewModel : BaseViewModel
 	// Lie a Button.Command dans le XAML.
 	public RelayCommand CalculerCommand { get; }
 	public RelayCommand EffacerCommand { get; }
+	public RelayCommand EffacerHistoriqueCommand { get; }
+
+	// Historique des calculs : observe par le CollectionView
+	// via l'interface INotifyCollectionChanged.
+	public ObservableCollection<EntreeHistorique> Historique
+		{ get; } = new();
+
+	public string CompteHistorique =>
+		Historique.Count == 0
+			? "Aucun calcul"
+			: $"{Historique.Count} calcul(s)";
+
+	public bool HistoriqueVisible => Historique.Count > 0;
 
 	public CalculateurViewModel()
 	{
@@ -100,6 +116,18 @@ public class CalculateurViewModel : BaseViewModel
 			Effacer,
 			() => ResultatVisible
 				  || !string.IsNullOrWhiteSpace(Nom));
+
+		EffacerHistoriqueCommand = new RelayCommand(
+			EffacerHistorique,
+			() => Historique.Count > 0);
+
+		// Chaque ajout/vidage notifie les proprietes derivees.
+		Historique.CollectionChanged += (_, _) =>
+		{
+			OnPropertyChanged(nameof(CompteHistorique));
+			OnPropertyChanged(nameof(HistoriqueVisible));
+			EffacerHistoriqueCommand.Rafraichir();
+		};
 	}
 
 	// La logique metier : aucun controle d'interface ici.
@@ -121,6 +149,15 @@ public class CalculateurViewModel : BaseViewModel
 			LibelleProchainAnniversaire(DateNaissance);
 		ResultatVisible = true;
 
+		// Le plus recent en premiere ligne.
+		Historique.Insert(0, new EntreeHistorique
+		{
+			Nom = Nom.Trim(),
+			DateNaissance = DateNaissance.Date,
+			Age = age,
+			Statut = Statut
+		});
+
 		Erreur = "";
 		ErreurVisible = false;
 		EffacerCommand.Rafraichir();
@@ -140,6 +177,9 @@ public class CalculateurViewModel : BaseViewModel
 		CalculerCommand.Rafraichir();
 		EffacerCommand.Rafraichir();
 	}
+
+	// Vide l'historique sans toucher aux champs du formulaire.
+	private void EffacerHistorique() => Historique.Clear();
 
 	private void AfficherErreur(string message)
 	{
