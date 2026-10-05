@@ -11,9 +11,24 @@
                    Placeholder="Votre nom"/>
             <Label Text="Date de naissance" FontSize="16"/>
             <DatePicker Date="{Binding DateNaissance, Mode=TwoWay}"/>
-            <Button Text="Calculer"
-                    Command="{Binding CalculerCommand}"/>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button Grid.Column="0" Text="Calculer"
+                        Command="{Binding CalculerCommand}"/>
+                <Button Grid.Column="1" Text="Effacer"
+                        Command="{Binding EffacerCommand}"/>
+            </Grid>
+
+            <Label Text="{Binding Erreur}" FontSize="16"
+                   TextColor="Red"
+                   IsVisible="{Binding ErreurVisible}"/>
+
             <Label Text="{Binding Resultat}" FontSize="20"
+                   IsVisible="{Binding ResultatVisible}"/>
+            <Label Text="{Binding Statut}" FontSize="18"
+                   FontAttributes="Bold"
+                   IsVisible="{Binding ResultatVisible}"/>
+            <Label Text="{Binding ProchainAnniversaire}" FontSize="16"
                    IsVisible="{Binding ResultatVisible}"/>
         </VerticalStackLayout>
     </ScrollView>

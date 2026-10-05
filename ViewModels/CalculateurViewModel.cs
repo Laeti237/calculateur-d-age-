@@ -1,27 +1,50 @@
 namespace CalculateurAge.ViewModels;
 
 // Contient l'ETAT de l'ecran et les ACTIONS possibles.
+// Aucun Label, Entry, Button ou DisplayAlert ici :
+// ce fichier pourrait etre compile dans une application console.
 public class CalculateurViewModel : BaseViewModel
 {
+	private static readonly DateTime DateParDefaut
+		= DateTime.Today.AddYears(-20);
+
 	// Champs prives : la vraie donnee.
 	private string _nom = "";
-	private DateTime _dateNaissance
-		= DateTime.Today.AddYears(-20);
+	private DateTime _dateNaissance = DateParDefaut;
 	private string _resultat = "";
 	private bool _resultatVisible;
+	private string _statut = "";
+	private string _prochainAnniversaire = "";
+	private string _erreur = "";
+	private bool _erreurVisible;
 
 	// Proprietes publiques : ce que le XAML voit.
 	public string Nom
 	{
 		get => _nom;
-		set { if (SetField(ref _nom, value))
-				  CalculerCommand.Rafraichir(); }
+		set
+		{
+			if (SetField(ref _nom, value))
+			{
+				CalculerCommand.Rafraichir();
+				EffacerCommand.Rafraichir();
+			}
+		}
 	}
 
 	public DateTime DateNaissance
 	{
 		get => _dateNaissance;
-		set => SetField(ref _dateNaissance, value);
+		set
+		{
+			if (SetField(ref _dateNaissance, value))
+			{
+				// Une nouvelle date efface l'erreur precedente.
+				Erreur = "";
+				ErreurVisible = false;
+				EffacerCommand.Rafraichir();
+			}
+		}
 	}
 
 	public string Resultat
@@ -36,25 +59,120 @@ public class CalculateurViewModel : BaseViewModel
 		set => SetField(ref _resultatVisible, value);
 	}
 
+	// "Majeur" ou "Mineur", calcule apres l'age.
+	public string Statut
+	{
+		get => _statut;
+		set => SetField(ref _statut, value);
+	}
+
+	// Jours restants avant le prochain anniversaire.
+	public string ProchainAnniversaire
+	{
+		get => _prochainAnniversaire;
+		set => SetField(ref _prochainAnniversaire, value);
+	}
+
+	// Message d'erreur affiche en rouge sous le formulaire.
+	public string Erreur
+	{
+		get => _erreur;
+		set => SetField(ref _erreur, value);
+	}
+
+	public bool ErreurVisible
+	{
+		get => _erreurVisible;
+		set => SetField(ref _erreurVisible, value);
+	}
+
 	// Lie a Button.Command dans le XAML.
 	public RelayCommand CalculerCommand { get; }
+	public RelayCommand EffacerCommand { get; }
 
 	public CalculateurViewModel()
 	{
 		CalculerCommand = new RelayCommand(
 			Calculer,
 			() => !string.IsNullOrWhiteSpace(Nom));
+
+		EffacerCommand = new RelayCommand(
+			Effacer,
+			() => ResultatVisible
+				  || !string.IsNullOrWhiteSpace(Nom));
 	}
 
 	// La logique metier : aucun controle d'interface ici.
 	private void Calculer()
 	{
-		int age = DateTime.Today.Year
-				  - DateNaissance.Year;
-		if (DateNaissance.Date >
-			DateTime.Today.AddYears(-age)) age--;
+		// Refus d'une date future.
+		if (DateNaissance.Date > DateTime.Today)
+		{
+			AfficherErreur("La date de naissance ne peut pas "
+						   + "etre dans le futur.");
+			return;
+		}
+
+		int age = CalculerAge(DateNaissance);
 
 		Resultat = $"{Nom}, vous avez {age} ans";
+		Statut = age >= 18 ? "Majeur" : "Mineur";
+		ProchainAnniversaire =
+			LibelleProchainAnniversaire(DateNaissance);
 		ResultatVisible = true;
+
+		Erreur = "";
+		ErreurVisible = false;
+		EffacerCommand.Rafraichir();
+	}
+
+	// Remet tous les champs a zero.
+	private void Effacer()
+	{
+		Nom = "";
+		DateNaissance = DateParDefaut;
+		Resultat = "";
+		ResultatVisible = false;
+		Statut = "";
+		ProchainAnniversaire = "";
+		Erreur = "";
+		ErreurVisible = false;
+		CalculerCommand.Rafraichir();
+		EffacerCommand.Rafraichir();
+	}
+
+	private void AfficherErreur(string message)
+	{
+		Erreur = message;
+		ErreurVisible = true;
+		ResultatVisible = false;
+	}
+
+	// Age exact : on retire une annee si l'anniversaire
+	// n'est pas encore passe cette annee.
+	public static int CalculerAge(DateTime dateNaissance)
+	{
+		int age = DateTime.Today.Year - dateNaissance.Year;
+		if (dateNaissance.Date > DateTime.Today.AddYears(-age))
+			age--;
+		return age;
+	}
+
+	// "12 jour(s) avant votre anniversaire (17/10/2026)"
+	public static string LibelleProchainAnniversaire(
+		DateTime dateNaissance)
+	{
+		DateTime today = DateTime.Today;
+		DateTime prochain =
+			dateNaissance.AddYears(today.Year - dateNaissance.Year);
+		if (prochain.Date < today)
+			prochain = prochain.AddYears(1);
+
+		int jours = (prochain.Date - today).Days;
+
+		return jours == 0
+			? "C'est votre anniversaire aujourd'hui !"
+			: $"{jours} jour(s) avant votre anniversaire "
+			  + $"({prochain:dd/MM/yyyy})";
 	}
 }
