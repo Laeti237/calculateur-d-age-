@@ -5,8 +5,6 @@ using CalculateurAge.Services;
 namespace CalculateurAge.ViewModels;
 
 // Contient l'ETAT de l'ecran et les ACTIONS possibles.
-// Aucun Label, Entry, Button ou DisplayAlert ici :
-// ce fichier pourrait etre compile dans une application console.
 public class CalculateurViewModel : BaseViewModel
 {
 	private static readonly DateTime DateParDefaut
@@ -45,7 +43,6 @@ public class CalculateurViewModel : BaseViewModel
 		{
 			if (SetField(ref _dateNaissance, value))
 			{
-				// Une nouvelle date efface l'erreur precedente.
 				Erreur = "";
 				ErreurVisible = false;
 				EffacerCommand.Rafraichir();
@@ -75,21 +72,18 @@ public class CalculateurViewModel : BaseViewModel
 		}
 	}
 
-	// "Majeur" ou "Mineur", calcule apres l'age.
 	public string Statut
 	{
 		get => _statut;
 		set => SetField(ref _statut, value);
 	}
 
-	// Jours restants avant le prochain anniversaire.
 	public string ProchainAnniversaire
 	{
 		get => _prochainAnniversaire;
 		set => SetField(ref _prochainAnniversaire, value);
 	}
 
-	// Message d'erreur affiche en rouge sous le formulaire.
 	public string Erreur
 	{
 		get => _erreur;
@@ -106,13 +100,8 @@ public class CalculateurViewModel : BaseViewModel
 	public RelayCommand CalculerCommand { get; }
 	public RelayCommand EffacerCommand { get; }
 	public RelayCommand EffacerHistoriqueCommand { get; }
-
-	// Ouvre ResultatPage en lui transmettant l'etat courant :
-	// le ViewModel decide, le service de navigation sait comment.
 	public AsyncRelayCommand AfficherResultatCommand { get; }
 
-	// Historique des calculs : observe par le CollectionView
-	// via l'interface INotifyCollectionChanged.
 	public ObservableCollection<EntreeHistorique> Historique
 		{ get; } = new();
 
@@ -149,7 +138,6 @@ public class CalculateurViewModel : BaseViewModel
 			() => ResultatVisible
 				  && _navigation is not null);
 
-		// Chaque ajout/vidage notifie les proprietes derivees.
 		Historique.CollectionChanged += (_, _) =>
 		{
 			OnPropertyChanged(nameof(CompteHistorique));
@@ -161,7 +149,6 @@ public class CalculateurViewModel : BaseViewModel
 	// La logique metier : aucun controle d'interface ici.
 	private void Calculer()
 	{
-		// Refus d'une date future.
 		if (DateNaissance.Date > DateTime.Today)
 		{
 			AfficherErreur("La date de naissance ne peut pas "
@@ -178,7 +165,6 @@ public class CalculateurViewModel : BaseViewModel
 			LibelleProchainAnniversaire(DateNaissance);
 		ResultatVisible = true;
 
-		// Le plus recent en premiere ligne.
 		Historique.Insert(0, new EntreeHistorique
 		{
 			Nom = Nom.Trim(),
@@ -208,10 +194,8 @@ public class CalculateurViewModel : BaseViewModel
 		EffacerCommand.Rafraichir();
 	}
 
-	// Vide l'historique sans toucher aux champs du formulaire.
 	private void EffacerHistorique() => Historique.Clear();
 
-	// Transmet l'etat courant a la page de resultat.
 	private Task AfficherResultatAsync()
 		=> _navigation is null
 			? Task.CompletedTask
@@ -228,8 +212,8 @@ public class CalculateurViewModel : BaseViewModel
 		ResultatVisible = false;
 	}
 
-	// Age exact : on retire une annee si l'anniversaire
-	// n'est pas encore passe cette annee.
+	// Si l'anniversaire n'est pas encore passe cette annee,
+	// on retire une annee.
 	public static int CalculerAge(DateTime dateNaissance)
 	{
 		int age = DateTime.Today.Year - dateNaissance.Year;
@@ -238,7 +222,6 @@ public class CalculateurViewModel : BaseViewModel
 		return age;
 	}
 
-	// "12 jour(s) avant votre anniversaire (17/10/2026)"
 	public static string LibelleProchainAnniversaire(
 		DateTime dateNaissance)
 	{

@@ -9,8 +9,7 @@ public partial class MainPage : ContentPage
 	{
 		InitializeComponent();
 		// Objet dans lequel tous les {Binding} de la page
-		// vont chercher leurs valeurs. Le service de navigation
-		// est fourni au ViewModel : la vue ignore ou l'on va.
+		// vont chercher leurs valeurs.
 		BindingContext = new CalculateurViewModel(
 			new ShellNavigationService());
 	}

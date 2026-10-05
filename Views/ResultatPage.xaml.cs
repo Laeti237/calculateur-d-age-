@@ -3,9 +3,6 @@ using CalculateurAge.ViewModels;
 
 namespace CalculateurAge.Views;
 
-// Relie les parametres de l'URL aux proprietes du ViewModel.
-// Le code-behind ne fait QUE du branchement : aucun calcul,
-// aucun texte, aucune decision.
 [QueryProperty(nameof(Nom), "nom")]
 [QueryProperty(nameof(Age), "age")]
 [QueryProperty(nameof(Statut), "statut")]
@@ -25,8 +22,8 @@ public partial class ResultatPage : ContentPage
 		BindingContext = _viewModel;
 	}
 
-	// Ces proprietes sont remplies par la navigation, APRES le
-	// constructeur : on les transmet simplement au ViewModel.
+	// Ces proprietes sont remplies par la navigation,
+	// APRES le constructeur.
 	public string Nom
 	{
 		get => _viewModel.Nom;

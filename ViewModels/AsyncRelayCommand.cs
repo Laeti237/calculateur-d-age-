@@ -2,8 +2,6 @@ using System.Windows.Input;
 
 namespace CalculateurAge.ViewModels;
 
-// Variante asynchrone de RelayCommand : pour les actions
-// qui retournent un Task (navigation, acces disque, reseau...).
 public class AsyncRelayCommand : ICommand
 {
 	private readonly Func<Task> _executer;
@@ -19,8 +17,6 @@ public class AsyncRelayCommand : ICommand
 	public bool CanExecute(object? p)
 		=> _peutExecuter?.Invoke() ?? true;
 
-	// Point d'entree ICommand : async void, comme un
-	// gestionnaire d'evenement.
 	public async void Execute(object? p) => await _executer();
 
 	public event EventHandler? CanExecuteChanged;

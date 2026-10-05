@@ -2,8 +2,6 @@ using CalculateurAge.Services;
 
 namespace CalculateurAge.ViewModels;
 
-// Etat de la page de resultat : reconnu par le ViewModel
-// de la page principale, construit par lui.
 public class ResultatViewModel : BaseViewModel
 {
 	private readonly INavigationService _navigation;
@@ -39,14 +37,12 @@ public class ResultatViewModel : BaseViewModel
 		set { if (SetField(ref _anniversaire, value)) Recomposer(); }
 	}
 
-	// Titre : "Lea, vous avez 20 ans"
 	public string Message
 	{
 		get => _message;
 		set => SetField(ref _message, value);
 	}
 
-	// Sous-titre : "Majeur - 300 jour(s) avant ..."
 	public string Detail
 	{
 		get => _detail;
@@ -61,8 +57,6 @@ public class ResultatViewModel : BaseViewModel
 		RetourCommand = new AsyncRelayCommand(_navigation.RetourAsync);
 	}
 
-	// Les textes sont recomposes a chaque parametre recu :
-	// aucune logique d'affichage n'a lieu dans le code-behind.
 	private void Recomposer()
 	{
 		Message = string.IsNullOrWhiteSpace(Nom)
